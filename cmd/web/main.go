@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/elesq/gotemplatewebapp/pkg/config"
 	"github.com/elesq/gotemplatewebapp/pkg/handlers"
 	"github.com/elesq/gotemplatewebapp/pkg/render"
@@ -11,10 +13,22 @@ import (
 
 const portNumber = ":8080"
 
+var app config.AppConfig
+var session *scs.SessionManager
+
 // main function sets up the HTTP server and routes
 func main() {
 
-	var app config.AppConfig
+	app.IsProduction = false // set to true in production
+
+	// define the session and add it to the app config
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = app.IsProduction
+	app.Session = session
+
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("error crearing templates cache")
